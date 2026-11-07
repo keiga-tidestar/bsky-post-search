@@ -5,12 +5,10 @@ const {
   buildQuery,
   buildSearchUrl,
   evaluateForm,
-  formToPageParams,
   hasUnclosedQuote,
   isValidDate,
   isValidHandle,
   normalizeHandle,
-  pageParamsToForm,
   toSinceUtc,
   toUntilUtc,
 } = require('../js/script.js');
@@ -304,57 +302,6 @@ describe('言語', () => {
 
   it('選択肢にない値は無視する', () => {
     assert.equal(evaluateForm({ keyword: 'pauper', lang: 'fr' }).query, 'pauper');
-  });
-});
-
-describe('ページURLへの反映と復元', () => {
-  it('全項目が往復する', () => {
-    const form = {
-      author: 'alice.bsky.social',
-      keyword: '"統率者 戦" -スタンダード',
-      since: '2026-11-01',
-      until: '2026-11-03',
-      lang: 'ja',
-    };
-    const params = new URLSearchParams(formToPageParams(form).toString());
-    assert.deepEqual(pageParamsToForm(params), form);
-  });
-
-  it('空の項目はURLに入れない', () => {
-    assert.equal(formToPageParams({ keyword: 'pauper' }).toString(), 'q=pauper');
-    assert.equal(formToPageParams({ author: ' ', keyword: ' ' }).toString(), '');
-  });
-
-  it('投稿者は整形後のハンドルで保存する', () => {
-    const params = formToPageParams({ author: 'https://bsky.app/profile/Alice.bsky.social' });
-    assert.equal(params.get('author'), 'alice.bsky.social');
-  });
-
-  it('形式が不正なハンドルは入力のまま保存する', () => {
-    const params = formToPageParams({ author: ' a b ' });
-    assert.equal(params.get('author'), 'a b');
-  });
-
-  it('クエリが空なら全項目が空に戻る', () => {
-    assert.deepEqual(pageParamsToForm(new URLSearchParams('')), {
-      author: '',
-      keyword: '',
-      since: '',
-      until: '',
-      lang: '',
-    });
-  });
-
-  it('選択肢にない言語は保存も復元もしない', () => {
-    assert.equal(formToPageParams({ keyword: 'x', lang: 'fr' }).toString(), 'q=x');
-    assert.equal(pageParamsToForm(new URLSearchParams('q=x&lang=fr')).lang, '');
-  });
-
-  it('不正な日付は復元しない', () => {
-    const form = pageParamsToForm(new URLSearchParams('since=2026-02-30&until=abc&q=x'));
-    assert.equal(form.since, '');
-    assert.equal(form.until, '');
-    assert.equal(form.keyword, 'x');
   });
 });
 

@@ -136,34 +136,6 @@ function evaluateForm({ author = '', keyword = '', since = '', until = '', lang 
   };
 }
 
-/** フォームの値をページURLのクエリにする。空の項目は入れない */
-function formToPageParams({ author = '', keyword = '', since = '', until = '', lang = '' }) {
-  const handle = normalizeHandle(author);
-  const params = new URLSearchParams();
-  if (handle !== '') params.set('author', isValidHandle(handle) ? handle : author.trim());
-  if (keyword.trim() !== '') params.set('q', keyword);
-  if (since !== '') params.set('since', since);
-  if (until !== '') params.set('until', until);
-  if (LANGUAGES.includes(lang)) params.set('lang', lang);
-  return params;
-}
-
-/** ページURLのクエリをフォームの値に戻す。日付や言語として不正な値は捨てる */
-function pageParamsToForm(params) {
-  const readDate = (name) => {
-    const value = params.get(name) ?? '';
-    return isValidDate(value) ? value : '';
-  };
-  const lang = params.get('lang') ?? '';
-  return {
-    author: params.get('author') ?? '',
-    keyword: params.get('q') ?? '',
-    since: readDate('since'),
-    until: readDate('until'),
-    lang: LANGUAGES.includes(lang) ? lang : '',
-  };
-}
-
 // ---------------------------------------------------------
 //  【UI】検索ボタンを押したときに検証して開く
 // ---------------------------------------------------------
@@ -187,20 +159,6 @@ function initForm() {
       until: inputs.until.value,
       lang: langRadios.value,
     };
-  }
-
-  function writeForm(values) {
-    for (const [name, input] of Object.entries(inputs)) input.value = values[name];
-    langRadios.value = values.lang;
-  }
-
-  // 検索した条件をページURLに残し、ブックマークできるようにする
-  function syncPageUrl(values) {
-    try {
-      history.replaceState(null, '', `${location.pathname}?${formToPageParams(values)}`);
-    } catch (e) {
-      // URLを書き換えられない環境でも、検索はそのまま続ける
-    }
   }
 
   // 日付を途中まで入力すると value が空になり、期間なしで検索されてしまうため別に検出する
@@ -237,8 +195,7 @@ function initForm() {
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    const values = readForm();
-    const result = evaluateForm(values);
+    const result = evaluateForm(readForm());
     const errors = [...incompleteDateErrors(), ...result.errors];
     if (result.isEmpty && errors.length === 0) {
       errors.push({ field: null, message: '検索条件を1つ以上入力してください。' });
@@ -249,12 +206,9 @@ function initForm() {
       return;
     }
     showErrors([]);
-    syncPageUrl(values);
     // ポップアップブロックを避けるため、クリック（送信）の処理の中で直接開く
     window.open(result.url, '_blank', 'noopener,noreferrer');
   });
-
-  writeForm(pageParamsToForm(new URLSearchParams(location.search)));
 }
 
 // ---------------------------------------------------------
@@ -273,8 +227,6 @@ if (typeof module !== 'undefined') {
     buildSearchUrl,
     hasUnclosedQuote,
     evaluateForm,
-    formToPageParams,
-    pageParamsToForm,
   };
 } else {
   initForm();
