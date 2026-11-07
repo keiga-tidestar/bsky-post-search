@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src data:; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="投稿者・キーワード・期間から、Blueskyの検索画面を開く非公式ツール">
+  <title>投稿検索フォーム（非公式）</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="page">
+    <header class="masthead">
+      <p class="badge">非公式ツール</p>
+      <h1>投稿検索フォーム</h1>
+      <p class="lead">投稿者・キーワード・期間を指定して、bsky.app の検索画面を新しいタブで開きます。項目はすべて任意です。</p>
+    </header>
+
+    <form id="search-form" class="card" autocomplete="off" novalidate>
+      <div class="field">
+        <label for="author">投稿者</label>
+        <input id="author" name="author" type="text" placeholder="alice.bsky.social"
+          autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="search"
+          aria-describedby="author-hint">
+        <p class="hint" id="author-hint">ハンドルを1人分。@付きやプロフィールのURLも使えます。「.」がなければ .bsky.social を補います。</p>
+      </div>
+
+      <div class="field">
+        <label for="keyword">キーワード</label>
+        <input id="keyword" name="keyword" type="text" enterkeyhint="search"
+          aria-describedby="keyword-hint quote-warning">
+        <p class="hint" id="keyword-hint"><code>"hello world"</code> でフレーズ検索、<code>-word</code> でその語を含む投稿を除外します。</p>
+        <p class="notice notice-warning" id="quote-warning" hidden>「"」が閉じていません。このままだと0件になることがあります。</p>
+      </div>
+
+      <fieldset class="field">
+        <legend>期間（日本時間）</legend>
+        <div class="date-row">
+          <div class="date-field">
+            <label for="since">開始日</label>
+            <input id="since" name="since" type="date" aria-describedby="period-hint">
+          </div>
+          <span class="date-sep" aria-hidden="true">〜</span>
+          <div class="date-field">
+            <label for="until">終了日</label>
+            <input id="until" name="until" type="date" aria-describedby="period-hint">
+          </div>
+        </div>
+        <p class="hint" id="period-hint">開始日の0時から、終了日の終わりまでの投稿が対象です。</p>
+      </fieldset>
+
+      <div class="preview">
+        <p class="preview-label" id="query-label">検索するクエリ</p>
+        <output id="query" class="query" for="author keyword since until" aria-labelledby="query-label">—</output>
+      </div>
+
+      <div id="message" class="notice notice-error" role="alert" hidden></div>
+
+      <button type="submit" class="submit">bsky.app で検索する</button>
+      <p class="hint submit-hint">新しいタブで開きます。検索結果を見るには、bsky.app へのログインが必要です。</p>
+    </form>
+
+    <noscript><p class="notice notice-error">このページの利用にはJavaScriptが必要です。</p></noscript>
+
+    <footer class="footer">
+      <p>Bluesky公式とは関係のない、非公式のツールです。</p>
+      <p>入力内容は、検索時に bsky.app へ送るだけです。このページから他の宛先には送信しません。</p>
+      <p>入力内容はこのページのURLにも残ります。URLを共有するときは内容に注意してください。ブックマークしたURLを開くと、URLに含まれる内容はページの配信元にも届きます。</p>
+    </footer>
+  </main>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
