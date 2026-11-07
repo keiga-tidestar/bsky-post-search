@@ -5,6 +5,7 @@ const {
   buildQuery,
   buildSearchUrl,
   evaluateForm,
+  handlePagePath,
   hasUnclosedQuote,
   isValidDate,
   isValidHandle,
@@ -13,6 +14,7 @@ const {
   toSinceUtc,
   toUntilUtc,
 } = require('../js/script.js');
+const { parseHandlePath } = require('../js/redirect.js');
 
 const qOf = (url) => new URL(url).searchParams.get('q');
 
@@ -327,6 +329,67 @@ describe('URLのhandleパラメータ', () => {
   it('入れた値は検索時に整形される', () => {
     const result = evaluateForm({ author: readHandleParam('?handle=%40Alice') });
     assert.equal(result.query, 'from:alice.bsky.social');
+  });
+});
+
+describe('URLの@ハンドル（404.htmlでの振り分け）', () => {
+  it('トップのパスとハンドルを取り出す', () => {
+    assert.deepEqual(parseHandlePath('/bsky-post-search/@alice.bsky.social'), {
+      base: '/bsky-post-search/',
+      handle: 'alice.bsky.social',
+    });
+  });
+
+  it('末尾のスラッシュを許す', () => {
+    assert.equal(parseHandlePath('/bsky-post-search/@alice/').handle, 'alice');
+  });
+
+  it('%エンコードを戻す', () => {
+    assert.equal(parseHandlePath('/bsky-post-search/@did%3Aplc%3Aabc').handle, 'did:plc:abc');
+  });
+
+  it('@で始まらないパスは対象外', () => {
+    assert.equal(parseHandlePath('/bsky-post-search/'), null);
+    assert.equal(parseHandlePath('/bsky-post-search/foo'), null);
+    assert.equal(parseHandlePath('/bsky-post-search/foo@alice'), null);
+  });
+
+  it('@のあとが空なら対象外', () => {
+    assert.equal(parseHandlePath('/bsky-post-search/@'), null);
+    assert.equal(parseHandlePath('/bsky-post-search/@%20'), null);
+  });
+
+  it('@のあとにさらにパスが続けば対象外', () => {
+    assert.equal(parseHandlePath('/bsky-post-search/@alice/post/123'), null);
+  });
+
+  it('壊れた%エンコードは対象外', () => {
+    assert.equal(parseHandlePath('/bsky-post-search/@%E0%A4%A'), null);
+  });
+});
+
+describe('アドレスバーの@ハンドル', () => {
+  it('トップのパスに@ハンドルを付ける', () => {
+    assert.equal(handlePagePath('/bsky-post-search/', 'alice.bsky.social'), '/bsky-post-search/@alice.bsky.social');
+  });
+
+  it('index.htmlのパスからでも同じ形にする', () => {
+    assert.equal(handlePagePath('/bsky-post-search/index.html', 'alice.bsky.social'), '/bsky-post-search/@alice.bsky.social');
+  });
+
+  it('整形したハンドルを使う', () => {
+    assert.equal(handlePagePath('/bsky-post-search/', '@Alice'), '/bsky-post-search/@alice.bsky.social');
+  });
+
+  it('正しいハンドルにならなければ書き換えない', () => {
+    assert.equal(handlePagePath('/bsky-post-search/', 'a b'), '');
+    assert.equal(handlePagePath('/bsky-post-search/', ''), '');
+  });
+
+  it('@のURL→?handle=→@のURLと往復する', () => {
+    const { base, handle } = parseHandlePath('/bsky-post-search/@Alice');
+    const search = `?handle=${encodeURIComponent(handle)}`;
+    assert.equal(handlePagePath(base, readHandleParam(search)), '/bsky-post-search/@alice.bsky.social');
   });
 });
 

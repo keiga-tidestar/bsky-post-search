@@ -141,6 +141,16 @@ function readHandleParam(search) {
   return (new URLSearchParams(search).get('handle') ?? '').trim();
 }
 
+/**
+ * アドレスバーに出す「…/@ハンドル」のパスを返す。整形しても正しいハンドルにならなければ空文字。
+ * pathname はトップのパス（/bsky-post-search/ や /bsky-post-search/index.html）
+ */
+function handlePagePath(pathname, handle) {
+  const normalized = normalizeHandle(handle);
+  if (normalized === '' || !isValidHandle(normalized)) return '';
+  return `${pathname.replace(/[^/]*$/, '')}@${normalized}`;
+}
+
 // ---------------------------------------------------------
 //  【UI】検索ボタンを押したときに検証して開く
 // ---------------------------------------------------------
@@ -215,8 +225,25 @@ function initForm() {
     window.open(result.url, '_blank', 'noopener,noreferrer');
   });
 
+  // ?handle= で開いたときは、アドレスバーを「…/@ハンドル」の形に書き換える。
+  // その形のURLを開き直すと、404.html（js/redirect.js）が ?handle= に戻してここへ来る。
+  // 手元で file:// として開いたときは、書き換えると再読み込みで開けなくなるので何もしない
+  function showHandleInAddressBar(handle) {
+    if (!/^https?:$/.test(location.protocol)) return;
+    const path = handlePagePath(location.pathname, handle);
+    if (path === '') return;
+    try {
+      history.replaceState(null, '', path);
+    } catch (e) {
+      // 書き換えられなくても、投稿者欄には入っている
+    }
+  }
+
   const handle = readHandleParam(location.search);
-  if (handle) inputs.author.value = handle;
+  if (handle) {
+    inputs.author.value = handle;
+    showHandleInAddressBar(handle);
+  }
 }
 
 // ---------------------------------------------------------
@@ -236,6 +263,7 @@ if (typeof module !== 'undefined') {
     hasUnclosedQuote,
     evaluateForm,
     readHandleParam,
+    handlePagePath,
   };
 } else {
   initForm();
