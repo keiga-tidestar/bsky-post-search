@@ -366,6 +366,20 @@ describe('URLの@ハンドル（404.htmlでの振り分け）', () => {
   it('壊れた%エンコードは対象外', () => {
     assert.equal(parseHandlePath('/bsky-post-search/@%E0%A4%A'), null);
   });
+
+  it('//で始まるパスは対象外（別サイトへ移動させない）', () => {
+    assert.equal(parseHandlePath('//example.com/@x'), null);
+    assert.equal(parseHandlePath('//example.com/bsky-post-search/@x'), null);
+  });
+
+  it('リポジトリ名より深いパスは対象外', () => {
+    assert.equal(parseHandlePath('/bsky-post-search//example.com/@x'), null);
+    assert.equal(parseHandlePath('/bsky-post-search/foo/@alice'), null);
+  });
+
+  it('リポジトリ名がないパスは対象外', () => {
+    assert.equal(parseHandlePath('/@alice'), null);
+  });
 });
 
 describe('アドレスバーの@ハンドル', () => {
@@ -384,6 +398,17 @@ describe('アドレスバーの@ハンドル', () => {
   it('正しいハンドルにならなければ書き換えない', () => {
     assert.equal(handlePagePath('/bsky-post-search/', 'a b'), '');
     assert.equal(handlePagePath('/bsky-post-search/', ''), '');
+  });
+
+  it('DIDの:はそのまま残す', () => {
+    assert.equal(handlePagePath('/bsky-post-search/', 'did:plc:abc'), '/bsky-post-search/@did:plc:abc');
+  });
+
+  it('DIDの%はエンコードし、開き直すと元の値に戻る', () => {
+    const did = 'did:web:example.com%3A8080';
+    const path = handlePagePath('/bsky-post-search/', did);
+    assert.equal(path, '/bsky-post-search/@did:web:example.com%253A8080');
+    assert.equal(parseHandlePath(path).handle, did);
   });
 
   it('@のURL→?handle=→@のURLと往復する', () => {
