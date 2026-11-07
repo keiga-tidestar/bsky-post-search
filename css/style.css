@@ -11,8 +11,6 @@
   --code-bg: #ecefea;
   --error: #b42318;
   --error-bg: #fdecea;
-  --warning: #7a4a00;
-  --warning-bg: #fff3d6;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -28,8 +26,6 @@
     --code-bg: #272b2e;
     --error: #ff9d94;
     --error-bg: #3a1e1c;
-    --warning: #ffcf70;
-    --warning-bg: #362b14;
   }
 }
 
@@ -167,27 +163,6 @@ code {
   color: var(--muted);
 }
 
-.preview {
-  margin: 0 0 16px;
-}
-
-.preview-label {
-  margin: 0 0 4px;
-  font-weight: 600;
-}
-
-.query {
-  display: block;
-  min-height: 2.75em;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: var(--code-bg);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.875rem;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
 .notice {
   margin: 8px 0 0;
   padding: 8px 12px;
@@ -203,11 +178,6 @@ code {
   margin: 0 0 16px;
   background: var(--error-bg);
   color: var(--error);
-}
-
-.notice-warning {
-  background: var(--warning-bg);
-  color: var(--warning);
 }
 
 .submit {

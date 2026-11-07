@@ -98,7 +98,7 @@ function hasUnclosedQuote(keyword) {
 
 /**
  * フォームの値を検証し、検索できる場合だけ query と url を返す。
- * errors の field は author / since / until / range のいずれか。
+ * errors の field は author / keyword / since / until / range のいずれか。
  */
 function evaluateForm({ author = '', keyword = '', since = '', until = '' }) {
   const handle = normalizeHandle(author);
@@ -108,13 +108,16 @@ function evaluateForm({ author = '', keyword = '', since = '', until = '' }) {
   if (handle !== '' && !isValidHandle(handle)) {
     errors.push({ field: 'author', message: '投稿者のハンドルの形式が正しくありません。' });
   }
+  if (hasUnclosedQuote(keyword)) {
+    errors.push({ field: 'keyword', message: 'キーワードの「"」が閉じていません。' });
+  }
   if (since !== '' && !isValidDate(since)) {
     errors.push({ field: 'since', message: '開始日が正しい日付ではありません。' });
   }
   if (until !== '' && !isValidDate(until)) {
     errors.push({ field: 'until', message: '終了日が正しい日付ではありません。' });
   }
-  if (errors.length === 0 && since !== '' && until !== '' && since > until) {
+  if (isValidDate(since) && isValidDate(until) && since > until) {
     errors.push({ field: 'range', message: '開始日は終了日以前の日付にしてください。' });
   }
 
@@ -123,7 +126,6 @@ function evaluateForm({ author = '', keyword = '', since = '', until = '' }) {
   return {
     isEmpty,
     errors,
-    hasUnclosedQuote: hasUnclosedQuote(keyword),
     query,
     url: canSearch ? buildSearchUrl(query) : '',
   };
@@ -155,7 +157,7 @@ function pageParamsToForm(params) {
 }
 
 // ---------------------------------------------------------
-//  【UI】表示の更新と検索
+//  【UI】検索ボタンを押したときに検証して開く
 // ---------------------------------------------------------
 
 function initForm() {
@@ -166,12 +168,7 @@ function initForm() {
     since: document.getElementById('since'),
     until: document.getElementById('until'),
   };
-  const queryOutput = document.getElementById('query');
   const messageBox = document.getElementById('message');
-  const quoteWarning = document.getElementById('quote-warning');
-
-  // 入力途中のハンドルは不正に見えるため、欄を離れるか検索するまでエラーを出さない
-  let isEditingAuthor = false;
 
   function readForm() {
     return {
@@ -186,12 +183,12 @@ function initForm() {
     for (const [name, input] of Object.entries(inputs)) input.value = values[name];
   }
 
+  // 検索した条件をページURLに残し、ブックマークできるようにする
   function syncPageUrl(values) {
-    const params = formToPageParams(values).toString();
     try {
-      history.replaceState(null, '', params ? `${location.pathname}?${params}` : location.pathname);
+      history.replaceState(null, '', `${location.pathname}?${formToPageParams(values)}`);
     } catch (e) {
-      // 短時間に呼びすぎると例外を投げるブラウザがある。次の入力で反映し直すので無視する
+      // URLを書き換えられない環境でも、検索はそのまま続ける
     }
   }
 
@@ -204,68 +201,49 @@ function initForm() {
   }
 
   function fieldsOf(error) {
-    return error.field === 'range' ? ['since', 'until'] : [error.field];
+    if (error.field === 'range') return ['since', 'until'];
+    return error.field ? [error.field] : [];
   }
 
-  function showMessages(messages) {
-    messageBox.replaceChildren(
-      ...messages.map((text) => {
-        const p = document.createElement('p');
-        p.textContent = text;
-        return p;
-      }),
-    );
-    messageBox.hidden = messages.length === 0;
-  }
-
-  function render({ submitted = false } = {}) {
-    const values = readForm();
-    const result = evaluateForm(values);
-    const errors = [...incompleteDateErrors(), ...result.errors];
-    const isEmpty = result.isEmpty && errors.length === 0;
-    const canSearch = !isEmpty && errors.length === 0;
-    const shownErrors = errors.filter((e) => submitted || e.field !== 'author' || !isEditingAuthor);
-
-    const invalidFields = new Set(shownErrors.flatMap(fieldsOf));
+  function showErrors(errors) {
+    const invalidFields = new Set(errors.flatMap(fieldsOf));
     for (const [name, input] of Object.entries(inputs)) {
       if (invalidFields.has(name)) input.setAttribute('aria-invalid', 'true');
       else input.removeAttribute('aria-invalid');
     }
-
-    const messages = shownErrors.map((e) => e.message);
-    if (submitted && isEmpty) messages.push('検索条件を1つ以上入力してください。');
-    showMessages(messages);
-
-    queryOutput.textContent = canSearch ? result.query : '—';
-    quoteWarning.hidden = !result.hasUnclosedQuote;
-    syncPageUrl(values);
-
-    return { canSearch, url: result.url, firstField: errors[0] ? fieldsOf(errors[0])[0] : 'author' };
+    messageBox.replaceChildren(
+      ...errors.map((error) => {
+        const p = document.createElement('p');
+        p.textContent = error.message;
+        return p;
+      }),
+    );
+    messageBox.hidden = errors.length === 0;
   }
 
-  form.addEventListener('input', (event) => {
-    if (event.target === inputs.author) isEditingAuthor = true;
-    render();
-  });
-
-  inputs.author.addEventListener('blur', () => {
-    isEditingAuthor = false;
-    render();
-  });
+  // 入力を直したら、前回のエラー表示は消す
+  form.addEventListener('input', () => showErrors([]));
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    const { canSearch, url, firstField } = render({ submitted: true });
-    if (!canSearch) {
-      inputs[firstField].focus();
+    const values = readForm();
+    const result = evaluateForm(values);
+    const errors = [...incompleteDateErrors(), ...result.errors];
+    if (result.isEmpty && errors.length === 0) {
+      errors.push({ field: null, message: '検索条件を1つ以上入力してください。' });
+    }
+    if (errors.length > 0) {
+      showErrors(errors);
+      inputs[fieldsOf(errors[0])[0] ?? 'author'].focus();
       return;
     }
+    showErrors([]);
+    syncPageUrl(values);
     // ポップアップブロックを避けるため、クリック（送信）の処理の中で直接開く
-    window.open(url, '_blank', 'noopener,noreferrer');
+    window.open(result.url, '_blank', 'noopener,noreferrer');
   });
 
   writeForm(pageParamsToForm(new URLSearchParams(location.search)));
-  render();
 }
 
 // ---------------------------------------------------------

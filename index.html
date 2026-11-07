@@ -31,9 +31,8 @@
       <div class="field">
         <label for="keyword">キーワード</label>
         <input id="keyword" name="keyword" type="text" enterkeyhint="search"
-          aria-describedby="keyword-hint quote-warning">
+          aria-describedby="keyword-hint">
         <p class="hint" id="keyword-hint"><code>"hello world"</code> でフレーズ検索、<code>-word</code> でその語を含む投稿を除外します。</p>
-        <p class="notice notice-warning" id="quote-warning" hidden>「"」が閉じていません。このままだと0件になることがあります。</p>
       </div>
 
       <fieldset class="field">
@@ -52,11 +51,6 @@
         <p class="hint" id="period-hint">開始日の0時から、終了日の終わりまでの投稿が対象です。</p>
       </fieldset>
 
-      <div class="preview">
-        <p class="preview-label" id="query-label">検索するクエリ</p>
-        <output id="query" class="query" for="author keyword since until" aria-labelledby="query-label">—</output>
-      </div>
-
       <div id="message" class="notice notice-error" role="alert" hidden></div>
 
       <button type="submit" class="submit">bsky.app で検索する</button>
@@ -68,7 +62,7 @@
     <footer class="footer">
       <p>Bluesky公式とは関係のない、非公式のツールです。</p>
       <p>入力内容は、検索時に bsky.app へ送るだけです。このページから他の宛先には送信しません。</p>
-      <p>入力内容はこのページのURLにも残ります。URLを共有するときは内容に注意してください。ブックマークしたURLを開くと、URLに含まれる内容はページの配信元にも届きます。</p>
+      <p>検索した内容はこのページのURLにも残ります。URLを共有するときは内容に注意してください。ブックマークしたURLを開くと、URLに含まれる内容はページの配信元にも届きます。</p>
     </footer>
   </main>
 

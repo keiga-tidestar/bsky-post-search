@@ -208,11 +208,11 @@ describe('キーワード', () => {
     assert.equal(hasUnclosedQuote('hello'), false);
   });
 
-  it('閉じていない引用符は警告だけで検索は止めない', () => {
-    const result = evaluateForm({ keyword: '"hello' });
-    assert.equal(result.hasUnclosedQuote, true);
-    assert.equal(result.errors.length, 0);
-    assert.equal(result.query, '"hello');
+  it('閉じていない引用符があれば検索させない', () => {
+    const result = evaluateForm({ keyword: '"hello', author: 'alice' });
+    assert.deepEqual(result.errors.map((e) => e.field), ['keyword']);
+    assert.equal(result.query, '');
+    assert.equal(result.url, '');
   });
 });
 
@@ -222,6 +222,11 @@ describe('入力の検証', () => {
     assert.deepEqual(result.errors.map((e) => e.field), ['range']);
     assert.equal(result.query, '');
     assert.equal(result.url, '');
+  });
+
+  it('ほかの項目にエラーがあっても日付の前後を検出する', () => {
+    const result = evaluateForm({ keyword: '"hello', since: '2026-11-04', until: '2026-11-03' });
+    assert.deepEqual(result.errors.map((e) => e.field), ['keyword', 'range']);
   });
 
   it('年をまたいで前後が逆でも検出する', () => {
