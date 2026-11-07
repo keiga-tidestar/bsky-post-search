@@ -366,6 +366,20 @@ describe('URLの@ハンドル（404.htmlでの振り分け）', () => {
   it('壊れた%エンコードは対象外', () => {
     assert.equal(parseHandlePath('/bsky-post-search/@%E0%A4%A'), null);
   });
+
+  it('//で始まるパスは対象外（別サイトへ移動させない）', () => {
+    assert.equal(parseHandlePath('//example.com/@x'), null);
+    assert.equal(parseHandlePath('//example.com/bsky-post-search/@x'), null);
+  });
+
+  it('リポジトリ名より深いパスは対象外', () => {
+    assert.equal(parseHandlePath('/bsky-post-search//example.com/@x'), null);
+    assert.equal(parseHandlePath('/bsky-post-search/foo/@alice'), null);
+  });
+
+  it('リポジトリ名がないパスは対象外', () => {
+    assert.equal(parseHandlePath('/@alice'), null);
+  });
 });
 
 describe('アドレスバーの@ハンドル', () => {

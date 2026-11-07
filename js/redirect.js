@@ -3,9 +3,12 @@
 //  GitHub Pages は存在しないパスに 404.html を返すため、ここで振り分ける
 // =========================================================
 
-/** パスが「…/@ハンドル」なら、トップのパスとハンドルを返す。違えば null */
+/**
+ * パスが「/リポジトリ名/@ハンドル」なら、トップのパスとハンドルを返す。違えば null。
+ * 手前は1階層だけを受け付ける。「//他サイト/@x」のようなパスを移動先にしないため
+ */
 function parseHandlePath(pathname) {
-  const match = /^(.*\/)@([^/]+)\/?$/.exec(pathname);
+  const match = /^(\/[^/]+\/)@([^/]+)\/?$/.exec(pathname);
   if (!match) return null;
   try {
     const handle = decodeURIComponent(match[2]).trim();
