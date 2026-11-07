@@ -400,6 +400,17 @@ describe('アドレスバーの@ハンドル', () => {
     assert.equal(handlePagePath('/bsky-post-search/', ''), '');
   });
 
+  it('DIDの:はそのまま残す', () => {
+    assert.equal(handlePagePath('/bsky-post-search/', 'did:plc:abc'), '/bsky-post-search/@did:plc:abc');
+  });
+
+  it('DIDの%はエンコードし、開き直すと元の値に戻る', () => {
+    const did = 'did:web:example.com%3A8080';
+    const path = handlePagePath('/bsky-post-search/', did);
+    assert.equal(path, '/bsky-post-search/@did:web:example.com%253A8080');
+    assert.equal(parseHandlePath(path).handle, did);
+  });
+
   it('@のURL→?handle=→@のURLと往復する', () => {
     const { base, handle } = parseHandlePath('/bsky-post-search/@Alice');
     const search = `?handle=${encodeURIComponent(handle)}`;

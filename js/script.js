@@ -148,7 +148,10 @@ function readHandleParam(search) {
 function handlePagePath(pathname, handle) {
   const normalized = normalizeHandle(handle);
   if (normalized === '' || !isValidHandle(normalized)) return '';
-  return `${pathname.replace(/[^/]*$/, '')}@${normalized}`;
+  // 開き直すと redirect.js が decodeURIComponent で戻すので、対になるようエンコードする。
+  // ハンドルに使う英数字・.・- は変わらない。DIDの : は読みやすさのため残す
+  const segment = encodeURIComponent(normalized).replace(/%3A/gi, ':');
+  return `${pathname.replace(/[^/]*$/, '')}@${segment}`;
 }
 
 // ---------------------------------------------------------
