@@ -19,6 +19,8 @@ const PROFILE_URL_RE = /^(?:https?:\/\/)?(?:www\.)?bsky\.app\/profile\/([^/?#\s]
 const HANDLE_RE = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 const DID_RE = /^did:[a-z]+:[a-zA-Z0-9._:%-]*[a-zA-Z0-9._-]$/;
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
+// 言語のラジオボタンで選べる値。空文字は指定なし
+const LANGUAGES = ['ja', 'en'];
 
 /**
  * 投稿者の入力をハンドルへ整形する。空なら空文字を返す。
@@ -75,12 +77,13 @@ function toUntilUtc(date) {
   return jstMidnightToUtc(date, 1);
 }
 
-function buildQuery({ keyword = '', handle = '', since = '', until = '' }) {
+function buildQuery({ keyword = '', handle = '', since = '', until = '', lang = '' }) {
   return [
     keyword.trim() === '' ? '' : keyword,
     handle && `from:${handle}`,
     since && `since:${toSinceUtc(since)}`,
     until && `until:${toUntilUtc(until)}`,
+    lang && `lang:${lang}`,
   ]
     .filter(Boolean)
     .join(' ');
@@ -100,8 +103,10 @@ function hasUnclosedQuote(keyword) {
  * フォームの値を検証し、検索できる場合だけ query と url を返す。
  * errors の field は author / keyword / since / until / range のいずれか。
  */
-function evaluateForm({ author = '', keyword = '', since = '', until = '' }) {
+function evaluateForm({ author = '', keyword = '', since = '', until = '', lang = '' }) {
   const handle = normalizeHandle(author);
+  const language = LANGUAGES.includes(lang) ? lang : '';
+  // 言語は絞り込みの条件なので、言語だけでは検索しない
   const isEmpty = handle === '' && keyword.trim() === '' && since === '' && until === '';
   const errors = [];
 
@@ -122,7 +127,7 @@ function evaluateForm({ author = '', keyword = '', since = '', until = '' }) {
   }
 
   const canSearch = !isEmpty && errors.length === 0;
-  const query = canSearch ? buildQuery({ keyword, handle, since, until }) : '';
+  const query = canSearch ? buildQuery({ keyword, handle, since, until, lang: language }) : '';
   return {
     isEmpty,
     errors,
@@ -132,27 +137,30 @@ function evaluateForm({ author = '', keyword = '', since = '', until = '' }) {
 }
 
 /** フォームの値をページURLのクエリにする。空の項目は入れない */
-function formToPageParams({ author = '', keyword = '', since = '', until = '' }) {
+function formToPageParams({ author = '', keyword = '', since = '', until = '', lang = '' }) {
   const handle = normalizeHandle(author);
   const params = new URLSearchParams();
   if (handle !== '') params.set('author', isValidHandle(handle) ? handle : author.trim());
   if (keyword.trim() !== '') params.set('q', keyword);
   if (since !== '') params.set('since', since);
   if (until !== '') params.set('until', until);
+  if (LANGUAGES.includes(lang)) params.set('lang', lang);
   return params;
 }
 
-/** ページURLのクエリをフォームの値に戻す。日付として不正な値は捨てる */
+/** ページURLのクエリをフォームの値に戻す。日付や言語として不正な値は捨てる */
 function pageParamsToForm(params) {
   const readDate = (name) => {
     const value = params.get(name) ?? '';
     return isValidDate(value) ? value : '';
   };
+  const lang = params.get('lang') ?? '';
   return {
     author: params.get('author') ?? '',
     keyword: params.get('q') ?? '',
     since: readDate('since'),
     until: readDate('until'),
+    lang: LANGUAGES.includes(lang) ? lang : '',
   };
 }
 
@@ -168,6 +176,7 @@ function initForm() {
     since: document.getElementById('since'),
     until: document.getElementById('until'),
   };
+  const langRadios = form.elements.namedItem('lang');
   const messageBox = document.getElementById('message');
 
   function readForm() {
@@ -176,11 +185,13 @@ function initForm() {
       keyword: inputs.keyword.value,
       since: inputs.since.value,
       until: inputs.until.value,
+      lang: langRadios.value,
     };
   }
 
   function writeForm(values) {
     for (const [name, input] of Object.entries(inputs)) input.value = values[name];
+    langRadios.value = values.lang;
   }
 
   // 検索した条件をページURLに残し、ブックマークできるようにする

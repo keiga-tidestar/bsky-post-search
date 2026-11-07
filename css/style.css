@@ -97,7 +97,8 @@ legend {
   font-weight: 600;
 }
 
-input {
+input[type="text"],
+input[type="date"] {
   display: block;
   width: 100%;
   min-width: 0;
@@ -129,6 +130,29 @@ input[aria-invalid="true"] {
 
 input[type="date"]::-webkit-date-and-time-value {
   text-align: left;
+}
+
+.radio-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+}
+
+.radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px; /* タップしやすい高さ */
+  margin: 0;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--accent);
 }
 
 .hint {

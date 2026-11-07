@@ -273,6 +273,40 @@ describe('入力の検証', () => {
   });
 });
 
+describe('言語', () => {
+  it('末尾に lang: を付ける', () => {
+    assert.equal(evaluateForm({ keyword: 'pauper', lang: 'ja' }).query, 'pauper lang:ja');
+  });
+
+  it('全項目と組み合わせられる', () => {
+    const result = evaluateForm({
+      author: 'alice.bsky.social',
+      keyword: 'pauper',
+      since: '2026-11-01',
+      until: '2026-11-03',
+      lang: 'en',
+    });
+    assert.equal(
+      qOf(result.url),
+      'pauper from:alice.bsky.social since:2026-10-31T15:00:00Z until:2026-11-03T15:00:00Z lang:en',
+    );
+  });
+
+  it('指定なしなら lang: を付けない', () => {
+    assert.equal(evaluateForm({ keyword: 'pauper', lang: '' }).query, 'pauper');
+  });
+
+  it('言語だけでは検索しない', () => {
+    const result = evaluateForm({ lang: 'ja' });
+    assert.equal(result.isEmpty, true);
+    assert.equal(result.url, '');
+  });
+
+  it('選択肢にない値は無視する', () => {
+    assert.equal(evaluateForm({ keyword: 'pauper', lang: 'fr' }).query, 'pauper');
+  });
+});
+
 describe('ページURLへの反映と復元', () => {
   it('全項目が往復する', () => {
     const form = {
@@ -280,6 +314,7 @@ describe('ページURLへの反映と復元', () => {
       keyword: '"統率者 戦" -スタンダード',
       since: '2026-11-01',
       until: '2026-11-03',
+      lang: 'ja',
     };
     const params = new URLSearchParams(formToPageParams(form).toString());
     assert.deepEqual(pageParamsToForm(params), form);
@@ -306,7 +341,13 @@ describe('ページURLへの反映と復元', () => {
       keyword: '',
       since: '',
       until: '',
+      lang: '',
     });
+  });
+
+  it('選択肢にない言語は保存も復元もしない', () => {
+    assert.equal(formToPageParams({ keyword: 'x', lang: 'fr' }).toString(), 'q=x');
+    assert.equal(pageParamsToForm(new URLSearchParams('q=x&lang=fr')).lang, '');
   });
 
   it('不正な日付は復元しない', () => {
