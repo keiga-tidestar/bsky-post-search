@@ -12,6 +12,8 @@
 
 `index.html?handle=alice.bsky.social` のように `handle` を付けて開くと、投稿者欄にその値が入った状態で始まる。
 
+公開版では `https://keiga-tidestar.github.io/bsky-post-search/@alice.bsky.social` の形でも開ける。GitHub Pagesが存在しないURLに返す `404.html` が `?handle=` に置き換えて開き直し、アドレスバーは `/@ハンドル` の形に戻す。手元で `index.html` を直接開いたときは使えない。
+
 ## 生成する検索URL
 
 ```
@@ -33,10 +35,12 @@ pauper from:alice.bsky.social since:2026-10-31T15:00:00Z until:2026-11-03T15:00:
 
 ```
 index.html          エントリポイント
+404.html            /@ハンドル のURLを ?handle= に置き換えて開き直す
 css/
   style.css         スタイル（レスポンシブ・ダークモード対応）
 js/
   script.js         URL生成ロジック・画面の更新
+  redirect.js       404.html 用の振り分け
 test/
   script.test.js    URL生成ロジックのテスト
 ```
