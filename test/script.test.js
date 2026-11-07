@@ -9,6 +9,7 @@ const {
   isValidDate,
   isValidHandle,
   normalizeHandle,
+  readHandleParam,
   toSinceUtc,
   toUntilUtc,
 } = require('../js/script.js');
@@ -302,6 +303,30 @@ describe('言語', () => {
 
   it('選択肢にない値は無視する', () => {
     assert.equal(evaluateForm({ keyword: 'pauper', lang: 'fr' }).query, 'pauper');
+  });
+});
+
+describe('URLのhandleパラメータ', () => {
+  it('値を返す', () => {
+    assert.equal(readHandleParam('?handle=alice.bsky.social'), 'alice.bsky.social');
+  });
+
+  it('エンコードされた@を戻す', () => {
+    assert.equal(readHandleParam('?handle=%40alice'), '@alice');
+  });
+
+  it('前後の空白を除く', () => {
+    assert.equal(readHandleParam('?handle=+alice+'), 'alice');
+  });
+
+  it('パラメータがなければ空', () => {
+    assert.equal(readHandleParam(''), '');
+    assert.equal(readHandleParam('?q=pauper'), '');
+  });
+
+  it('入れた値は検索時に整形される', () => {
+    const result = evaluateForm({ author: readHandleParam('?handle=%40Alice') });
+    assert.equal(result.query, 'from:alice.bsky.social');
   });
 });
 

@@ -10,6 +10,8 @@
 
 `index.html` をブラウザで直接開くだけで動作する。サーバー・インストール不要。
 
+`index.html?handle=alice.bsky.social` のように `handle` を付けて開くと、投稿者欄にその値が入った状態で始まる。
+
 ## 生成する検索URL
 
 ```

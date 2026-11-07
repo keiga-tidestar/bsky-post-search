@@ -136,6 +136,11 @@ function evaluateForm({ author = '', keyword = '', since = '', until = '', lang 
   };
 }
 
+/** ページURLの ?handle= の値を返す。投稿者欄の初期値に使う（例: index.html?handle=alice.bsky.social） */
+function readHandleParam(search) {
+  return (new URLSearchParams(search).get('handle') ?? '').trim();
+}
+
 // ---------------------------------------------------------
 //  【UI】検索ボタンを押したときに検証して開く
 // ---------------------------------------------------------
@@ -209,6 +214,9 @@ function initForm() {
     // ポップアップブロックを避けるため、クリック（送信）の処理の中で直接開く
     window.open(result.url, '_blank', 'noopener,noreferrer');
   });
+
+  const handle = readHandleParam(location.search);
+  if (handle) inputs.author.value = handle;
 }
 
 // ---------------------------------------------------------
@@ -227,6 +235,7 @@ if (typeof module !== 'undefined') {
     buildSearchUrl,
     hasUnclosedQuote,
     evaluateForm,
+    readHandleParam,
   };
 } else {
   initForm();
