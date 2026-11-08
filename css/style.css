@@ -121,6 +121,14 @@ input[type="date"]::-webkit-date-and-time-value {
   text-align: left;
 }
 
+/* iOSのSafariでは標準の見た目のままだと、日付欄がwidth: 100%を無視して横にはみ出す */
+@supports (-webkit-touch-callout: none) {
+  input[type="date"] {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+}
+
 .radio-row {
   display: flex;
   flex-wrap: wrap;
