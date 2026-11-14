@@ -38,7 +38,8 @@ index.html          エントリポイント
 404.html            /@ハンドル のURLを ?handle= に置き換えて開き直す
 favicon.ico         ファビコン（16・32・48px）
 favicon.svg         ファビコン（SVG対応ブラウザ用）
-apple-touch-icon.png  ホーム画面用アイコン（180px）。Xのカード画像も兼ねる
+apple-touch-icon.png  ホーム画面用アイコン（180px）
+og-image.png        リンクカード用の画像（1200×630px）
 css/
   style.css         スタイル（レスポンシブ・ダークモード対応）
 js/
