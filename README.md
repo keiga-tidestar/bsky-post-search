@@ -36,6 +36,9 @@ pauper from:alice.bsky.social since:2026-10-31T15:00:00Z until:2026-11-03T15:00:
 ```
 index.html          エントリポイント
 404.html            /@ハンドル のURLを ?handle= に置き換えて開き直す
+favicon.ico         ファビコン（16・32・48px）
+favicon.svg         ファビコン（SVG対応ブラウザ用）
+apple-touch-icon.png  ホーム画面用アイコン（180px）。Xのカード画像も兼ねる
 css/
   style.css         スタイル（レスポンシブ・ダークモード対応）
 js/
